@@ -12,7 +12,8 @@ import (
 	"sync"
 )
 
-var bind = flag.String("bind", ":3000", "HTTP bind address")
+var bindHTTP = flag.String("http", ":25000", "HTTP bind address")
+var bindHTTPS = flag.String("https", ":25001", "HTTPS bind address")
 var assets = flag.String("assets", filepath.Join(defaultBase("github.com/sqs/counter"), "assets"), "badge assets directory")
 
 var badgeColor color.RGBA
@@ -31,7 +32,16 @@ func main() {
 	flag.Parse()
 	http.Handle("/favicon.ico", http.HandlerFunc(http.NotFound))
 	http.Handle("/", &counters{counts: make(map[string]int)})
-	err := http.ListenAndServe(*bind, nil)
+
+	go func() {
+		log.Printf("https: listening on %s", *bindHTTPS)
+		err := http.ListenAndServeTLS(*bindHTTPS, "self-signed-ssl/cert.pem", "self-signed-ssl/key.pem", nil)
+		if err != nil {
+			log.Fatal("ListenAndServeTLS:", err)
+		}
+	}()
+	log.Printf("http: listening on %s", *bindHTTP)
+	err := http.ListenAndServe(*bindHTTP, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
