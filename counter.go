@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/sourcegraph/buckler/shield"
 	"go/build"
 	"image/color"
+	"io"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -59,12 +61,26 @@ func (c *counters) incr(name string) int {
 	return c.counts[name]
 }
 
+func (c *counters) write(w io.Writer) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for k, v := range c.counts {
+		fmt.Fprintf(w, "%s: %d\n", k, v)
+	}
+}
+
 func (c *counters) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	origPath := r.URL.Path
 	path := filepath.Clean(origPath)
 	if path != origPath {
 		log.Printf("REDIRECT %s -> %s", origPath, path)
 		http.Redirect(w, r, path, http.StatusMovedPermanently)
+		return
+	}
+
+	if path == "/" {
+		w.Header().Add("content-type", "text/plain")
+		c.write(w)
 		return
 	}
 
