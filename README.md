@@ -1,7 +1,7 @@
 # counter
 
-* **HTTP counter:** ![counter](http://162.243.131.99:25001/http.png)
-* **HTTPS counter:** ![counter](https://162.243.131.99:25000/https.png)
+* **HTTP counter:** ![counter](http://162.243.131.99/http.png)
+* **HTTPS counter:** ![counter](https://162.243.131.99/https.png)
 
 ## SSL cert generation
 
